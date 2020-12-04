@@ -1,75 +1,47 @@
+//tutorial used: https://www.programmersought.com/article/1275785794/
+
 #define PY_ARRAY_UNIQUE_SYMBOL pbcvt_ARRAY_API
 
 #include <boost/python.hpp>
 #include <pyboostcvconverter/pyboostcvconverter.hpp>
+#include <iostream>
 
 namespace pbcvt {
 
     using namespace boost::python;
 
-/**
- * @brief Example function. Basic inner matrix product using explicit matrix conversion.
- * @param left left-hand matrix operand (NdArray required)
- * @param right right-hand matrix operand (NdArray required)
- * @return an NdArray representing the dot-product of the left and right operands
- */
-    PyObject *dot(PyObject *left, PyObject *right) {
+    static PyObject *segmentNucleiStg1Py(PyObject *pyimg, PyObject *args) {
+        unsigned char blue;
+        unsigned char green;
+        unsigned char red;
+        double T1;
+        double T2;
 
-        cv::Mat leftMat, rightMat;
-        leftMat = pbcvt::fromNDArrayToMat(left);
-        rightMat = pbcvt::fromNDArrayToMat(right);
-        auto c1 = leftMat.cols, r2 = rightMat.rows;
-        // Check that the 2-D matrices can be legally multiplied.
-        if (c1 != r2) {
-            PyErr_SetString(PyExc_TypeError,
-                            "Incompatible sizes for matrix multiplication.");
-            throw_error_already_set();
+        std::vector<cv::Mat> *bgr;
+        cv::Mat *rbc;
+
+        cv::Mat img;
+        img = pbcvt::fromNDArrayToMat(pyimg);
+
+        if (!PyArg_ParseTuple(args, "bbbdd", &blue, &green, &red, &T1, &T2)) {
+            return NULL;
         }
-        cv::Mat result = leftMat * rightMat;
-        PyObject *ret = pbcvt::fromMatToNDArray(result);
-        return ret;
-    }
-/**
- * @brief Example function. Simply makes a new CV_16UC3 matrix and returns it as a numpy array.
- * @return The resulting numpy array.
- */
 
-	PyObject* makeCV_16UC3Matrix(){
-		cv::Mat image = cv::Mat::zeros(240,320, CV_16UC3);
-		PyObject* py_image = pbcvt::fromMatToNDArray(image);
-		return py_image;
-	}
+        std::cout << "Read parameters " << blue << ", " << green << ", " << red
+                  << ", " << T1 << ", " << T2 << ", "
+                  << " and will return zero\n";
 
-//
-/**
- * @brief Example function. Basic inner matrix product using implicit matrix conversion.
- * @details This example uses Mat directly, but we won't need to worry about the conversion in the body of the function.
- * @param leftMat left-hand matrix operand
- * @param rightMat right-hand matrix operand
- * @return an NdArray representing the dot-product of the left and right operands
- */
-    cv::Mat dot2(cv::Mat leftMat, cv::Mat rightMat) {
-        auto c1 = leftMat.cols, r2 = rightMat.rows;
-        if (c1 != r2) {
-            PyErr_SetString(PyExc_TypeError,
-                            "Incompatible sizes for matrix multiplication.");
-            throw_error_already_set();
-        }
-        cv::Mat result = leftMat * rightMat;
+        
+        //PyObject* seq1 = PyList_New(bgr->size());
+        //int i = 0;
+        //for(std::vector<cv::Mat>::iterator it = bgr->begin() ; it != bgr->end(); ++it){
+        //    PyObject* item = pbcvt::fromMatToNDArray(*it);
+        //    PyList_SET_ITEM(seq1, i, item);
+        //    i++;
+        //}
 
-        return result;
-    }
-
-    /**
-     * \brief Example function. Increments all elements of the given matrix by one.
-     * @details This example uses Mat directly, but we won't need to worry about the conversion anywhere at all,
-     * it is handled automatically by boost.
-     * \param matrix (numpy array) to increment
-     * \return
-     */
-    cv::Mat increment_elements_by_one(cv::Mat matrix){
-        matrix += 1.0;
-        return matrix;
+        //return seq1, pbcvt::fromMatToNDArray(*rbc);
+        return 0;
     }
 
 
@@ -94,13 +66,7 @@ namespace pbcvt {
         matFromNDArrayBoostConverter();
 
         //expose module-level functions
-        def("dot", dot);
-        def("dot2", dot2);
-		def("makeCV_16UC3Matrix", makeCV_16UC3Matrix);
-
-		//from PEP8 (https://www.python.org/dev/peps/pep-0008/?#prescriptive-naming-conventions)
-        //"Function names should be lowercase, with words separated by underscores as necessary to improve readability."
-        def("increment_elements_by_one", increment_elements_by_one);
+        def("segmentNucleiStg1Py", segmentNucleiStg1Py);
     }
 
 } //end namespace pbcvt
