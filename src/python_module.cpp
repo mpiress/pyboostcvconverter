@@ -12,6 +12,35 @@ namespace pbcvt {
 
 using namespace boost::python;
 
+
+//PyObject -> Vector
+vector<cv::Mat> listTupleToVector_Int(PyObject* incoming) {
+	vector<cv::Mat> data;
+	
+	for(Py_ssize_t i = 0; i < PyArray_Size(incoming); i++) {
+		cv::Mat *value = pbcvt::fromNDArrayToMat(incoming, i);
+		data.push_back(value);
+	}
+	
+	return data;
+
+}
+
+//Vector -> PyObject
+PyObject *vectorToListTuple_Int(PyObject *pyimg, PyObject *args) {
+	PyObject* seq = PyList_New(bgr->size());
+     
+     int i = 0;
+     for(std::vector<cv::Mat>::iterator it = bgr->begin() ; it != bgr->end(); ++it){
+        PyObject* item = pbcvt::fromMatToNDArray(*it);
+        PyList_SET_ITEM(seq, i, item);
+        i++;
+    }
+
+    return seq;
+}
+
+
 static PyObject *segmentNucleiStg1Py(PyObject *pyimg, PyObject *args) {
     unsigned char blue;
     unsigned char green;
@@ -29,24 +58,11 @@ static PyObject *segmentNucleiStg1Py(PyObject *pyimg, PyObject *args) {
         return NULL;
     }
 
-    std::cout << "Read parameters " << blue << ", " << green << ", " << red
-              << ", " << T1 << ", " << T2 << ", "
-              << " and will return zero\n";
+    ::nscale::HistologicalEntities::segmentNucleiStg1(img, blue, green, red, T1, T2, &bgr, &rbc);
 
-    ::nscale::HistologicalEntities::segmentNucleiStg1(img, blue, green, red, T1,
-                                                      T2, &bgr, &rbc);
+     
 
-    // PyObject* seq1 = PyList_New(bgr->size());
-    // int i = 0;
-    // for(std::vector<cv::Mat>::iterator it = bgr->begin() ; it != bgr->end();
-    // ++it){
-    //    PyObject* item = pbcvt::fromMatToNDArray(*it);
-    //    PyList_SET_ITEM(seq1, i, item);
-    //    i++;
-    //}
-
-    // return seq1, pbcvt::fromMatToNDArray(*rbc);
-    return 0;
+    return (seq1, pbcvt::fromMatToNDArray(*rbc))
 }
 
 #if (PY_VERSION_HEX >= 0x03000000)
