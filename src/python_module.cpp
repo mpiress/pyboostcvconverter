@@ -10,12 +10,10 @@
 namespace pbcvt {
 
 using namespace boost::python;
-using namespace cv;
-using namespace std;
 
 //PyObject -> Vector
 std::vector<cv::Mat> PyObjectToVector(PyObject *incoming) {
-	vector<cv::Mat> data;
+	std::vector<cv::Mat> data;
 	
 	for(Py_ssize_t i=0; i<PyList_Size(incoming); i++) {
 		PyObject *value = PyList_GetItem(incoming, i);
@@ -27,7 +25,7 @@ std::vector<cv::Mat> PyObjectToVector(PyObject *incoming) {
 }
 
 //Vector -> PyObject
-PyObject* VectorToPyObject(std::vector<cv::Mat> bgr) {
+PyObject* VectorToPyObject(vector<cv::Mat> bgr) {
 	PyObject* seq = PyList_New(bgr.size());
      
      int i = 0;
@@ -43,22 +41,22 @@ PyObject* VectorToPyObject(std::vector<cv::Mat> bgr) {
 
 static PyObject *segmentNucleiStg1Py(PyObject *pyimg, PyObject *args) {
     PyObject* result = PyList_New(2);
-    unsigned char blue;
-    unsigned char green;
-    unsigned char red;
-    double T1;
-    double T2;
+    const unsigned char *blue;
+    const unsigned char *green;
+    const unsigned char *red;
+    const double *T1;
+    const double *T2;
 
-    vector<cv::Mat> bgr;
-    Mat rbc;
+    std::vector<cv::Mat> bgr;
+    cv::Mat rbc;
 
-    Mat img = pbcvt::fromNDArrayToMat(pyimg);
+    cv::Mat img = pbcvt::fromNDArrayToMat(pyimg);
 
     if (!PyArg_ParseTuple(args, "bbbdd", &blue, &green, &red, &T1, &T2)) {
         return NULL;
     }
 
-    ::nscale::HistologicalEntities::segmentNucleiStg1(img, blue, green, red, T1, T2, &bgr, &rbc);
+    ::nscale::HistologicalEntities::segmentNucleiStg1(img, *blue, *green, *red, *T1, *T2, &bgr, &rbc);
     
     PyObject *py_rbc = pbcvt::fromMatToNDArray(rbc);
     PyObject *py_bgr = VectorToPyObject(bgr);
