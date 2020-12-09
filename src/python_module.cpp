@@ -5,33 +5,33 @@
 #include <boost/python.hpp>
 #include <iostream>
 #include <pyboostcvconverter/pyboostcvconverter.hpp>
-
 #include "HistologicalEntities.h"
 
 namespace pbcvt {
 
 using namespace boost::python;
-
+using namespace cv;
+using namespace std;
 
 //PyObject -> Vector
-vector<cv::Mat> listTupleToVector_Int(PyObject* incoming) {
+std::vector<cv::Mat> PyObjectToVector(PyObject *incoming) {
 	vector<cv::Mat> data;
 	
-	for(Py_ssize_t i = 0; i < PyArray_Size(incoming); i++) {
-		cv::Mat *value = pbcvt::fromNDArrayToMat(incoming, i);
-		data.push_back(value);
+	for(Py_ssize_t i=0; i<PyList_Size(incoming); i++) {
+		PyObject *value = PyList_GetItem(incoming, i);
+		cv::Mat vet = pbcvt::fromNDArrayToMat(value);
+		data.push_back(vet);
 	}
 	
 	return data;
-
 }
 
 //Vector -> PyObject
-PyObject *vectorToListTuple_Int(PyObject *pyimg, PyObject *args) {
-	PyObject* seq = PyList_New(bgr->size());
+PyObject* VectorToPyObject(std::vector<cv::Mat> bgr) {
+	PyObject* seq = PyList_New(bgr.size());
      
      int i = 0;
-     for(std::vector<cv::Mat>::iterator it = bgr->begin() ; it != bgr->end(); ++it){
+     for(std::vector<cv::Mat>::iterator it = bgr.begin() ; it != bgr.end(); ++it){
         PyObject* item = pbcvt::fromMatToNDArray(*it);
         PyList_SET_ITEM(seq, i, item);
         i++;
@@ -42,27 +42,30 @@ PyObject *vectorToListTuple_Int(PyObject *pyimg, PyObject *args) {
 
 
 static PyObject *segmentNucleiStg1Py(PyObject *pyimg, PyObject *args) {
+    PyObject* result = PyList_New(2);
     unsigned char blue;
     unsigned char green;
     unsigned char red;
     double T1;
     double T2;
 
-    std::vector<cv::Mat> bgr;
-    cv::Mat rbc;
+    vector<cv::Mat> bgr;
+    Mat rbc;
 
-    cv::Mat img;
-    img = pbcvt::fromNDArrayToMat(pyimg);
+    Mat img = pbcvt::fromNDArrayToMat(pyimg);
 
     if (!PyArg_ParseTuple(args, "bbbdd", &blue, &green, &red, &T1, &T2)) {
         return NULL;
     }
 
     ::nscale::HistologicalEntities::segmentNucleiStg1(img, blue, green, red, T1, T2, &bgr, &rbc);
+    
+    PyObject *py_rbc = pbcvt::fromMatToNDArray(rbc);
+    PyObject *py_bgr = VectorToPyObject(bgr);
+    PyList_SET_ITEM(result, 0, py_rbc);
+    PyList_SET_ITEM(result, 1, py_bgr); 
 
-     
-
-    return (seq1, pbcvt::fromMatToNDArray(*rbc))
+    return result;
 }
 
 #if (PY_VERSION_HEX >= 0x03000000)
