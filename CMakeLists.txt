@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project("pbcvt")
 
-# ----------------------------CMAKE & GLOBAL
-# PROPERTIES-------------------------#
+# NSCALE
+find_path(NSCALE_SRC_DIR REQUIRED)
+find_path(NSCALE_BUILD_DIR REQUIRED)
+set(nscalesrcdir ${NSCALE_SRC_DIR})
+set(nscalebuilddir ${NSCALE_BUILD_DIR})
+#link_directories(${nscalebuilddir}/lib)
+
+# ----------------------------CMAKE & GLOBAL PROPERTIES-------------------------#
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 # ============= C++11 support====================================
@@ -84,17 +90,6 @@ else()
   endif()
 endif()
 
-# NSCALE
-find_path(NSCALE_SRC_DIR REQUIRED)
-find_path(NSCALE_BUILD_DIR REQUIRED)
-set(nscalesrcdir ${NSCALE_SRC_DIR})
-set(nscalebuilddir ${NSCALE_BUILD_DIR})
-include_directories(${nscalesrcdir}/segment)
-include_directories(${nscalesrcdir}/common)
-include_directories(${nscalesrcdir}/features)
-include_directories(${nscalesrcdir}/normalization)
-link_directories(${nscalebuilddir}/lib)
-
 # ========pick python stuff========================================
 if(${PYTHON_DESIRED_VERSION} STREQUAL "2.X")
   set(PYTHON_INCLUDE_DIRS ${PYTHON2_INCLUDE_DIR} ${PYTHON2_INCLUDE_DIR2}
@@ -136,21 +131,32 @@ macro(pbcvt_add_pbcvt_library target_name STATIC)
       ${target_name} STATIC
       ${project_sources}
       ${CMAKE_CURRENT_SOURCE_DIR}/include/pyboostcvconverter/pyboostcvconverter.hpp
+      ${nscalebuilddir}/lib/libcci_common.so
+      ${nscalebuilddir}/lib/libnormalization.so
+      ${nscalebuilddir}/lib/libsegment.so
     )
   else()
     add_library(
       ${target_name} SHARED
       ${project_sources}
       ${CMAKE_CURRENT_SOURCE_DIR}/include/pyboostcvconverter/pyboostcvconverter.hpp
+      ${nscalebuilddir}/lib/libcci_common.so
+      ${nscalebuilddir}/lib/libnormalization.so
+      ${nscalebuilddir}/lib/libsegment.so
     )
   endif()
   target_include_directories(
     ${target_name}
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" ${Boost_INCLUDE_DIRS}
-           ${OpenCV_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS})
+           ${OpenCV_INCLUDE_DIRS} ${PYTHON_INCLUDE_DIRS} ${nscalesrcdir} 
+           ${nscalesrcdir}/segment ${nscalesrcdir}/common ${nscalesrcdir}/features ${nscalesrcdir}/normalization)
 
   target_link_libraries(${target_name} ${Boost_LIBRARIES} ${OpenCV_LIBRARIES}
-                        ${PYTHON_LIBRARIES})
+                        ${PYTHON_LIBRARIES}
+                        ${nscalebuilddir}/lib/libcci_common.so
+                        ${nscalebuilddir}/lib/libnormalization.so
+                        ${nscalebuilddir}/lib/libsegment.so)
+
 
   if(CMAKE_CXX_COMPILER_ID MATCHES MSVC)
     # Provisions for typical Boost compiled on Windows Unless some extra compile

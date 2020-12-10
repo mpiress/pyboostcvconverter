@@ -5,7 +5,8 @@
 #include <boost/python.hpp>
 #include <iostream>
 #include <pyboostcvconverter/pyboostcvconverter.hpp>
-#include "HistologicalEntities.h"
+#include <HistologicalEntities.h>
+
 
 namespace pbcvt {
 
@@ -39,31 +40,31 @@ PyObject* VectorToPyObject(vector<cv::Mat> bgr) {
 }
 
 
-static PyObject *segmentNucleiStg1Py(PyObject *pyimg, PyObject *args) {
+static PyObject *segmentNucleiStg1Py(PyObject *self, PyObject *args) {
     PyObject* result = PyList_New(2);
-    const unsigned char *blue;
-    const unsigned char *green;
-    const unsigned char *red;
-    const double *T1;
-    const double *T2;
+    unsigned char blue;
+    unsigned char green;
+    unsigned char red;
+    double T1;
+    double T2;
 
     std::vector<cv::Mat> bgr;
     cv::Mat rbc;
 
-    cv::Mat img = pbcvt::fromNDArrayToMat(pyimg);
+    //cv::Mat img = pbcvt::fromNDArrayToMat(pyimg);
 
     if (!PyArg_ParseTuple(args, "bbbdd", &blue, &green, &red, &T1, &T2)) {
         return NULL;
     }
 
-    ::nscale::HistologicalEntities::segmentNucleiStg1(img, *blue, *green, *red, *T1, *T2, &bgr, &rbc);
+    ::nscale::HistologicalEntities::helloWorld(blue, green, red, T1, T2);
     
-    PyObject *py_rbc = pbcvt::fromMatToNDArray(rbc);
-    PyObject *py_bgr = VectorToPyObject(bgr);
-    PyList_SET_ITEM(result, 0, py_rbc);
-    PyList_SET_ITEM(result, 1, py_bgr); 
+    //PyObject *py_rbc = pbcvt::fromMatToNDArray(rbc);
+    //PyObject *py_bgr = VectorToPyObject(bgr);
+    //PyList_SET_ITEM(result, 0, py_rbc);
+    //PyList_SET_ITEM(result, 1, py_bgr); 
 
-    return result;
+    return PyLong_FromLong(0);;
 }
 
 #if (PY_VERSION_HEX >= 0x03000000)
